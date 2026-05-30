@@ -2,7 +2,6 @@
 // dreams — app.js
 // ═══════════════════════════════════════════
 
-// --- Star symbols ---
 const STAR_SYMBOLS = ['✦', '✧', '⟡', '⋆', '⊹', '˚', '✶', '⁂', '✴', '∗'];
 
 // --- Mock Data ---
@@ -50,6 +49,7 @@ function render() {
   bindEvents();
 }
 
+// --- Lock Screen ---
 function renderLockScreen() {
   const app = document.getElementById('app');
   app.innerHTML = '';
@@ -57,35 +57,36 @@ function renderLockScreen() {
   const lock = document.createElement('div');
   lock.className = 'lock-screen';
 
-  // Star field container
   const starField = document.createElement('div');
   starField.className = 'star-field';
   starField.id = 'star-field';
   lock.appendChild(starField);
 
-  // Prompt
   const prompt = document.createElement('div');
   prompt.className = 'lock-prompt';
   prompt.id = 'lock-prompt';
   prompt.textContent = "What's that tune I hear?";
   lock.appendChild(prompt);
 
-  // Input
   const wrap = document.createElement('div');
   wrap.className = 'lock-input-wrap';
   wrap.id = 'lock-wrap';
   wrap.innerHTML = '<span class="prompt">❯</span><input type="password" id="lock-input" placeholder="..." autocomplete="off" spellcheck="false">';
   lock.appendChild(wrap);
 
-  // Error
   const err = document.createElement('div');
   err.className = 'lock-error';
   err.id = 'lock-error';
   err.textContent = 'access denied';
   lock.appendChild(err);
 
-  app.appendChild(lock);
+  const hint = document.createElement('div');
+  hint.className = 'lock-hint';
+  hint.id = 'lock-hint';
+  hint.textContent = '↵ enter to continue';
+  lock.appendChild(hint);
 
+  app.appendChild(lock);
   startStarAnimation();
 }
 
@@ -95,53 +96,40 @@ function startStarAnimation() {
   const wrapEl = document.getElementById('lock-wrap');
   const input = document.getElementById('lock-input');
   let starCount = 0;
-  const maxStars = 40;
-  const spawnInterval = 120; // ms between new stars
+  const maxStars = 35;
 
   function spawnStar() {
-    if (starCount >= maxStars) return;
-
-    const star = document.createElement('span');
-    star.className = 'twinkle-star';
-    star.textContent = STAR_SYMBOLS[Math.floor(Math.random() * STAR_SYMBOLS.length)];
-
-    // Random position across the field
-    const x = Math.random() * 100;
-    const y = Math.random() * 100;
-    star.style.left = x + '%';
-    star.style.top = y + '%';
-
-    // Random size
-    const size = 0.6 + Math.random() * 1.2;
-    star.style.fontSize = size + 'rem';
-
-    // Random animation duration and delay
-    const duration = 1.5 + Math.random() * 2.5;
-    const delay = Math.random() * 0.5;
-    star.style.animationDuration = duration + 's';
-    star.style.animationDelay = delay + 's';
-
-    field.appendChild(star);
-    starCount++;
-
-    if (starCount < maxStars) {
-      setTimeout(spawnStar, spawnInterval);
-    } else {
-      // All stars spawned, show prompt
+    if (starCount >= maxStars) {
       setTimeout(() => {
         promptEl.classList.add('visible');
         setTimeout(() => {
           wrapEl.classList.add('visible');
+          const hint = document.getElementById('lock-hint');
+          if (hint) hint.classList.add('visible');
           input.focus();
         }, 400);
       }, 600);
+      return;
     }
+
+    const star = document.createElement('span');
+    star.className = 'twinkle-star';
+    star.textContent = STAR_SYMBOLS[Math.floor(Math.random() * STAR_SYMBOLS.length)];
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    const size = 0.5 + Math.random() * 1;
+    star.style.fontSize = size + 'rem';
+    const duration = 2 + Math.random() * 3;
+    const delay = Math.random() * 0.5;
+    star.style.animationDuration = duration + 's';
+    star.style.animationDelay = delay + 's';
+    field.appendChild(star);
+    starCount++;
+    setTimeout(spawnStar, 100 + Math.random() * 80);
   }
 
-  // Start spawning after a beat
   setTimeout(spawnStar, 300);
 
-  // Handle passphrase input
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       if (input.value.length > 0) {
@@ -163,28 +151,33 @@ function startStarAnimation() {
   });
 }
 
+// --- Entry List ---
 function renderList() {
   const filtered = filterEntries(state.query);
 
   const entries = filtered.map(e => `
     <div class="entry-item" data-id="${e.id}">
-      <span class="entry-title">${escapeHtml(e.title.toLowerCase())}</span>
+      <div class="entry-left">
+        <span class="entry-marker">▸</span>
+        <span class="entry-title">${escapeHtml(e.title.toLowerCase())}</span>
+      </div>
       <span class="entry-meta">${e.date}</span>
     </div>
   `).join('');
 
   const empty = filtered.length === 0
-    ? '<div class="empty"><div class="empty-icon">//</div><div>no matches found</div></div>'
+    ? '<div class="empty"><div class="empty-icon">∅</div><div>no matches</div></div>'
     : '';
 
   return `
     <div class="header">
-      <div class="header-title">// dreams</div>
+      <div class="header-title">cat <span class="accent">dreams</span></div>
       <div class="header-sub">${MOCK_ENTRIES.length} entries · encrypted</div>
+      <div class="header-divider">─────────────────────────────────</div>
     </div>
     <div class="cmd-bar">
       <span class="prompt">❯</span>
-      <input type="text" id="search" placeholder="search entries..." value="${escapeHtml(state.query)}" autocomplete="off" spellcheck="false">
+      <input type="text" id="search" placeholder="grep..." value="${escapeHtml(state.query)}" autocomplete="off" spellcheck="false">
     </div>
     <div class="entry-list">
       ${entries}
@@ -193,12 +186,13 @@ function renderList() {
   `;
 }
 
+// --- Entry View ---
 function renderEntry(entry) {
   const formattedBody = entry.body
     .split('\n')
     .map(line => {
       if (line.startsWith('# ')) return `<h2>${escapeHtml(line.slice(2))}</h2>`;
-      if (line.startsWith('- ')) return `<p>${escapeHtml(line)}</p>`;
+      if (line.startsWith('- ')) return `<p>  ${escapeHtml(line)}</p>`;
       if (line.trim() === '') return '';
       return `<p>${escapeHtml(line)}</p>`;
     })
@@ -216,6 +210,7 @@ function renderEntry(entry) {
   `;
 }
 
+// --- Status Bar ---
 function renderStatusBar() {
   let existing = document.querySelector('.status-bar');
   if (!existing) {
@@ -225,11 +220,11 @@ function renderStatusBar() {
   }
 
   const left = state.view === 'entry'
-    ? `<span class="status-accent">reading</span> ${state.activeEntry.id}`
+    ? `<span class="status-accent">read</span> ${state.activeEntry.id}`
     : `<span class="status-accent">${filterEntries(state.query).length}</span> entries`;
 
   existing.style.display = 'flex';
-  existing.innerHTML = `<span>${left}</span><span>dreams v0.2</span>`;
+  existing.innerHTML = `<span>${left}</span><span>v0.2</span>`;
 }
 
 // --- Helpers ---
