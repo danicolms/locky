@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════
+   dreams — terminal interface
+   ═══════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --bg-raised: #111111;
+  --fg: #c8c8c8;
+  --fg-dim: #555555;
+  --accent: #4af626;
+  --accent-dim: #2a8a16;
+  --border: #222222;
+  --red: #e61919;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --glow: 0 0 8px rgba(74, 246, 38, 0.3);
+  --glow-subtle: 0 0 4px rgba(74, 246, 38, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ═══ LAYOUT ═══ */
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ═══ BOOT SCREEN ═══ */
+
+.boot {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.4s ease;
+}
+
+.boot.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-content {
+  text-align: left;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 1.5rem;
+}
+
+.boot-line {
+  opacity: 0;
+  animation: boot-in 0.15s ease forwards;
+}
+
+.boot-line .cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes boot-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ═══ HEADER ═══ */
+
+.header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: var(--glow-subtle);
+}
+
+.header-sub {
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+  margin-top: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+/* ═══ COMMAND BAR ═══ */
+
+.cmd-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.cmd-bar .prompt {
+  color: var(--accent);
+  font-weight: 700;
+  text-shadow: var(--glow-subtle);
+}
+
+.cmd-bar input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  flex: 1;
+  caret-color: var(--accent);
+}
+
+.cmd-bar input::placeholder {
+  color: var(--fg-dim);
+}
+
+/* ═══ ENTRY LIST ═══ */
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.entry-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.entry-item:hover {
+  background: var(--bg-raised);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.entry-item.active {
+  color: var(--accent);
+}
+
+.entry-title {
+  font-size: 0.875rem;
+  color: var(--fg);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entry-item:hover .entry-title,
+.entry-item.active .entry-title {
+  color: var(--accent);
+}
+
+.entry-meta {
+  font-size: 0.7rem;
+  color: var(--fg-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ═══ ENTRY VIEW ═══ */
+
+.entry-view {
+  display: none;
+}
+
+.entry-view.visible {
+  display: block;
+}
+
+.entry-view-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-view-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  text-shadow: var(--glow-subtle);
+  margin-bottom: 0.25rem;
+}
+
+.entry-view-date {
+  font-size: 0.7rem;
+  color: var(--fg-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.entry-view-body {
+  font-size: 0.875rem;
+  line-height: 1.8;
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.entry-view-body p {
+  margin-bottom: 1rem;
+}
+
+.entry-view-body h2 {
+  font-size: 0.8rem;
+  color: var(--accent-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.entry-view-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  transition: color 0.15s ease;
+}
+
+.entry-view-back:hover {
+  color: var(--accent);
+}
+
+/* ═══ STATUS BAR ═══ */
+
+.status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border);
+  padding: 0.4rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--fg-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-bar .status-accent {
+  color: var(--accent);
+}
+
+/* ═══ EMPTY STATE ═══ */
+
+.empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--fg-dim);
+}
+
+.empty .empty-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+/* ═══ RESPONSIVE ═══ */
+
+@media (max-width: 640px) {
+  html { font-size: 13px; }
+  #app { padding: 1.5rem 1rem 4rem; }
+  .entry-meta { display: none; }
+}
+
+/* ═══ SCROLLBAR ═══ */
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-dim); }
