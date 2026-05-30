@@ -1,30 +1,92 @@
 // ═══════════════════════════════════════════
 // dreams — app.js
+// Real decryption via Web Crypto API
 // ═══════════════════════════════════════════
 
 const STAR_SYMBOLS = ['✦', '✧', '⟡', '⋆', '⊹', '˚', '✶', '⁂', '✴', '∗'];
-
-// --- Mock Data ---
-const MOCK_ENTRIES = [
-  { id: 'entry-001', title: 'The Long Corridor', date: '2026-05-15', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nCurabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris.' },
-  { id: 'entry-002', title: 'Floating Architecture', date: '2026-05-16', body: 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante.\n\nDonec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra.' },
-  { id: 'entry-003', title: 'The Empty Theater', date: '2026-05-17', body: 'Nullam dignissim lacus ut sapien volutpat euismod. Morbi nec metus. Phasellus blandit leo ut odio. Maecenas ullamcorper, dui et placerat feugiat, eros pede varius leo, sit amet consequat dolor lorem.\n\nSed vel lectus. Donec odio tempus molestie, porttitor ut, iaculis quis, sem. Nullam cursus luctus mauris ut gravida. Cras dapibus. Vivamus elementum semper nisi.' },
-  { id: 'entry-004', title: 'Gable Grip', date: '2026-05-18', body: 'Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc.\n\nQuis gravida magna mi a libero. Fusce vulputate eleifend sapien. Vestibulum purus quam, scelerisque ut, mollis sed, perspiciatis unde omnis iste natus error sit voluptatem.' },
-  { id: 'entry-005', title: 'Sheik at the Table', date: '2026-05-19', body: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.\n\n- Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet\n- Consectetur, adipisci velit, sed quia non numquam eius modi tempora\n- Ut enim ad minima veniam, quis nostrum exercitationem ullam\n\nCorporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?' },
-  { id: 'entry-006', title: 'The Cell', date: '2026-05-20', body: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.\n\nSimilique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.' },
-  { id: 'entry-007', title: 'Shoreline', date: '2026-05-21', body: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae.\n\nItaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.' },
-  { id: 'entry-008', title: 'Movement', date: '2026-05-22', body: 'Praesent dapibus, neque id cursus faucibus, tortor neque egestas auguae, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.\n\nPhasellus ultrices nulla quis nibh. Quisque a lectus. Donec consectetuer ligula vulputate sem tristique cursus.\n\n# Notes\nHaec disputation perspicua et clara est in somnio\nTemporibus antiquis memoria teneatur et saepe recurrat' },
-  { id: 'entry-009', title: 'Submarine', date: '2026-05-23', body: 'Aenean lectus elit, fermentum non, convallis id, sagittis at, neque. Nullam mauris orci, aliquet et, iaculis et, viverra vitae, ligula. Nulla ut felis in purus aliquam imperdiet.\n\nMaecenas aliquet mollis lectus. Vivamus consectetuer risus et tortor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer malesuada.' },
-  { id: 'entry-010', title: 'Missile in the Closet', date: '2026-05-24', body: 'Fusce ornare mi vel risus molestie vel ornare nisl consequat. Cras semper erat et lacus placerat accumsan. Sed massa nibh, molestie nec, commodo vel, mattis sit amet, metus.\n\nSuspendisse potenti. In hac habitasse platea dictumst. Proin eget ligula at nunc vehicula pulvinar. Fusce lobortis risus ac ante viverra fermentum.\n\n# Interpretation' }
-];
 
 // --- State ---
 let state = {
   view: 'lock',
   activeEntry: null,
   query: '',
-  unlocked: false,
+  passphrase: null,
+  entries: [],       // decrypted entries: { id, title, date, body }
+  manifest: [],      // from manifest.json: { id, file, title, date }
 };
+
+// --- Crypto ---
+async function deriveKey(passphrase, salt, iterations) {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(passphrase),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+}
+
+async function decryptEntry(passphrase, encText) {
+  const lines = encText.trim().split('\n');
+  const salt = hexToBytes(lines[0]);
+  const iv = hexToBytes(lines[1]);
+  const iterations = parseInt(lines[2]);
+  const ciphertext = base64ToBytes(lines.slice(3).join('\n'));
+
+  const key = await deriveKey(passphrase, salt, iterations);
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    ciphertext
+  );
+
+  const decoder = new TextDecoder();
+  return JSON.parse(decoder.decode(decrypted));
+}
+
+// --- Helpers ---
+function hexToBytes(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return bytes;
+}
+
+function base64ToBytes(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function filterEntries(query) {
+  if (!query) return state.entries;
+  const q = query.toLowerCase();
+  return state.entries.filter(e =>
+    e.title.toLowerCase().includes(q) ||
+    e.body.toLowerCase().includes(q) ||
+    (e.date && e.date.includes(q))
+  );
+}
 
 // --- Render ---
 function render() {
@@ -104,8 +166,7 @@ function startStarAnimation() {
         promptEl.classList.add('visible');
         setTimeout(() => {
           wrapEl.classList.add('visible');
-          const hint = document.getElementById('lock-hint');
-          if (hint) hint.classList.add('visible');
+          document.getElementById('lock-hint')?.classList.add('visible');
           input.focus();
         }, 400);
       }, 600);
@@ -117,12 +178,9 @@ function startStarAnimation() {
     star.textContent = STAR_SYMBOLS[Math.floor(Math.random() * STAR_SYMBOLS.length)];
     star.style.left = Math.random() * 100 + '%';
     star.style.top = Math.random() * 100 + '%';
-    const size = 0.5 + Math.random() * 1;
-    star.style.fontSize = size + 'rem';
-    const duration = 2 + Math.random() * 3;
-    const delay = Math.random() * 0.5;
-    star.style.animationDuration = duration + 's';
-    star.style.animationDelay = delay + 's';
+    star.style.fontSize = (0.5 + Math.random() * 1) + 'rem';
+    star.style.animationDuration = (2 + Math.random() * 3) + 's';
+    star.style.animationDelay = (Math.random() * 0.5) + 's';
     field.appendChild(star);
     starCount++;
     setTimeout(spawnStar, 100 + Math.random() * 80);
@@ -130,25 +188,87 @@ function startStarAnimation() {
 
   setTimeout(spawnStar, 300);
 
-  input.addEventListener('keydown', (e) => {
+  input.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
-      if (input.value.length > 0) {
-        state.unlocked = true;
-        state.view = 'list';
-        render();
-      } else {
-        const wrap = document.getElementById('lock-wrap');
-        const err = document.getElementById('lock-error');
-        wrap.classList.add('error');
-        err.classList.add('visible');
-        input.value = '';
-        setTimeout(() => {
-          wrap.classList.remove('error');
-          err.classList.remove('visible');
-        }, 1500);
+      const passphrase = input.value;
+      if (!passphrase) {
+        showError();
+        return;
+      }
+
+      // Disable input while decrypting
+      input.disabled = true;
+      input.value = '';
+
+      try {
+        await unlock(passphrase);
+      } catch (err) {
+        showError();
+        input.disabled = false;
+        input.focus();
       }
     }
   });
+}
+
+function showError() {
+  const wrap = document.getElementById('lock-wrap');
+  const err = document.getElementById('lock-error');
+  wrap.classList.add('error');
+  err.classList.add('visible');
+  setTimeout(() => {
+    wrap.classList.remove('error');
+    err.classList.remove('visible');
+  }, 1500);
+}
+
+async function unlock(passphrase) {
+  state.passphrase = passphrase;
+
+  // Fetch manifest
+  const manifestResp = await fetch('data/manifest.json');
+  if (!manifestResp.ok) throw new Error('no manifest');
+  state.manifest = await manifestResp.json();
+
+  // Try decrypting first entry to validate passphrase
+  const firstEntry = state.manifest[0];
+  if (!firstEntry) throw new Error('empty manifest');
+
+  const encResp = await fetch(`data/${firstEntry.file}`);
+  if (!encResp.ok) throw new Error('file not found');
+  const encText = await encResp.text();
+
+  // If this fails, passphrase is wrong → throws
+  const payload = await decryptEntry(passphrase, encText);
+
+  // Passphrase is valid. Decrypt all entries.
+  state.entries = [];
+  for (const entry of state.manifest) {
+    try {
+      const resp = await fetch(`data/${entry.file}`);
+      const text = await resp.text();
+      const decrypted = await decryptEntry(passphrase, text);
+      state.entries.push({
+        id: entry.id,
+        title: decrypted.title || entry.title,
+        date: decrypted.date || entry.date,
+        body: decrypted.body,
+      });
+    } catch (e) {
+      // Skip entries that fail to decrypt
+      console.warn(`Failed to decrypt ${entry.file}`, e);
+    }
+  }
+
+  // Sort by date descending (newest first)
+  state.entries.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return b.date.localeCompare(a.date);
+  });
+
+  state.view = 'list';
+  render();
 }
 
 // --- Entry List ---
@@ -161,7 +281,7 @@ function renderList() {
         <span class="entry-marker">▸</span>
         <span class="entry-title">${escapeHtml(e.title.toLowerCase())}</span>
       </div>
-      <span class="entry-meta">${e.date}</span>
+      <span class="entry-meta">${e.date || '—'}</span>
     </div>
   `).join('');
 
@@ -172,7 +292,7 @@ function renderList() {
   return `
     <div class="header">
       <div class="header-title">cat <span class="accent">dreams</span></div>
-      <div class="header-sub">${MOCK_ENTRIES.length} entries · encrypted</div>
+      <div class="header-sub">${state.entries.length} entries · decrypted</div>
       <div class="header-divider">─────────────────────────────────</div>
     </div>
     <div class="cmd-bar">
@@ -202,7 +322,7 @@ function renderEntry(entry) {
     <button class="entry-view-back" id="back">← back</button>
     <div class="entry-view-header">
       <div class="entry-view-title">${escapeHtml(entry.title)}</div>
-      <div class="entry-view-date">${entry.date}</div>
+      <div class="entry-view-date">${entry.date || '—'}</div>
     </div>
     <div class="entry-view-body">
       ${formattedBody}
@@ -224,24 +344,7 @@ function renderStatusBar() {
     : `<span class="status-accent">${filterEntries(state.query).length}</span> entries`;
 
   existing.style.display = 'flex';
-  existing.innerHTML = `<span>${left}</span><span>v0.2</span>`;
-}
-
-// --- Helpers ---
-function filterEntries(query) {
-  if (!query) return MOCK_ENTRIES;
-  const q = query.toLowerCase();
-  return MOCK_ENTRIES.filter(e =>
-    e.title.toLowerCase().includes(q) ||
-    e.body.toLowerCase().includes(q) ||
-    e.date.includes(q)
-  );
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  existing.innerHTML = `<span>${left}</span><span>v0.3</span>`;
 }
 
 // --- Events ---
@@ -272,7 +375,7 @@ function bindEvents() {
   document.querySelectorAll('.entry-item').forEach(item => {
     item.addEventListener('click', () => {
       const id = item.dataset.id;
-      state.activeEntry = MOCK_ENTRIES.find(e => e.id === id);
+      state.activeEntry = state.entries.find(e => e.id === id);
       state.view = 'entry';
       render();
     });
