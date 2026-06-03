@@ -1,0 +1,120 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    text-align: center;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.drop-zone {
+    border: 3px dashed #3498db;
+    border-radius: 10px;
+    padding: 40px;
+    margin: 30px 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: #f8f9fa;
+}
+
+.drop-zone:hover {
+    background-color: #eef2f7;
+    border-color: #2980b9;
+}
+
+.drop-zone.dragover {
+    background-color: #e3f2fd;
+    border-color: #1e88e5;
+}
+
+.star-pattern {
+    font-size: 12px;
+    color: #3498db;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.star-pattern pre {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.drop-zone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.results {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.passphrase-box {
+    background-color: #e8f4fc;
+    border: 1px solid #b8d8f5;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+#passphrase {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+    background-color: white;
+}
+
+.button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #2980b9;
+}
+
+#copy-passphrase {
+    background-color: #2ecc71;
+    margin-left: 10px;
+}
+
+#copy-passphrase:hover {
+    background-color: #27ae60;
+}
+
+download-box {
+    margin-top: 20px;
+}

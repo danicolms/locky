@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locky MVP - File Encryption</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Locky MVP</h1>
+        <p>Simple file encryption - drag and drop a file below</p>
+        
+        <div id="drop-zone" class="drop-zone">
+            <div class="drop-zone-content">
+                <div class="star-pattern">
+                    <pre>
+       *
+      * *
+     *   *
+    *     *
+   *       *
+  *         *
+ *           *
+*             *
+ *           *
+  *         *
+   *       *
+    *     *
+     *   *
+      * *
+       *
+                    </pre>
+                </div>
+                <p>Drag & drop files here or click to browse</p>
+                <input type="file" id="file-input" style="display: none;">
+            </div>
+        </div>
+        
+        <div id="results" class="results" style="display: none;">
+            <h2>Encryption Results</h2>
+            <div class="passphrase-box">
+                <h3>Your Passphrase:</h3>
+                <input type="text" id="passphrase" readonly>
+                <button id="copy-passphrase">Copy</button>
+            </div>
+            <div class="download-box">
+                <h3>Encrypted File:</h3>
+                <a id="download-link" class="button">Download Encrypted File</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
