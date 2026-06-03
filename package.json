@@ -1,0 +1,23 @@
+{
+  "name": "locky",
+  "version": "1.0.0",
+  "description": "Simple file encryption web app",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Building Locky...' && mkdir -p dist && cp index.html style.css script.js dist/",
+    "start": "echo 'Locky is a static app - open index.html in browser'",
+    "deploy": "echo 'Use GitHub Actions for deployment'",
+    "test": "echo 'No tests yet - add your test scripts here'"
+  },
+  "keywords": ["encryption", "security", "webapp", "privacy"],
+  "author": "Daniel Colmenares Salamanca <claw@danicolms.xyz>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danicolms/locky.git"
+  },
+  "bugs": {
+    "url": "https://github.com/danicolms/locky/issues"
+  },
+  "homepage": "https://danicolms.github.io/locky/"
+}
