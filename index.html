@@ -3,53 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locky MVP - File Encryption</title>
+    <title>LOCKY - Your quick encryption companion</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🔒 Locky MVP</h1>
-        <p>Simple file encryption - drag and drop a file below</p>
+    <div class="scene-container">
+        <!-- Game Header -->
+        <div class="game-header">
+            <h1>LOCKY</h1>
+            <p class="tagline">Your quick and easy encryption solution</p>
+        </div>
         
-        <div id="drop-zone" class="drop-zone">
-            <div class="drop-zone-content">
-                <div class="star-pattern">
-                    <pre>
-       *
-      * *
-     *   *
-    *     *
-   *       *
-  *         *
- *           *
-*             *
- *           *
-  *         *
-   *       *
-    *     *
-     *   *
-      * *
-       *
-                    </pre>
+        <!-- Main Scene/Storefront -->
+        <div class="storefront-scene">
+            <!-- Cashier Character Placeholder -->
+            <div class="cashier-character">
+                <div class="sprite-placeholder cashier-sprite">👨‍💼</div>
+                <p id="cashier-dialog" class="dialog-box">Welcome to Locky! What would you like to do today?</p>
+            </div>
+            
+            <!-- Counter with Transaction Box -->
+            <div class="counter">
+                <div id="transaction-box" class="transaction-box closed">
+                    <div id="box-contents" class="box-contents">
+                        <p class="box-instruction">Drag & drop your file here</p>
+                    </div>
                 </div>
-                <p>Drag & drop files here or click to browse</p>
-                <input type="file" id="file-input" style="display: none;">
+            </div>
+        
+            <!-- Service Tabs (Lock/Unlock) -->
+            <div class="service-tabs">
+                <button id="lock-tab" class="service-btn active">🔒 Lock</button>
+                <button id="unlock-tab" class="service-btn">🔓 Unlock</button>
             </div>
         </div>
         
-        <div id="results" class="results" style="display: none;">
-            <h2>Encryption Results</h2>
-            <div class="passphrase-box">
-                <h3>Your Passphrase:</h3>
-                <input type="text" id="passphrase" readonly>
-                <button id="copy-passphrase">Copy</button>
-            </div>
-            <div class="download-box">
-                <h3>Encrypted File:</h3>
-                <a id="download-link" class="button">Download Encrypted File</a>
+        <!-- Results/Actions Panel -->
+        <div id="results-panel" class="results-panel" style="display: none;">
+            <h3>Transaction Complete!</h3>
+            <div id="transaction-results">
+                <!-- Lock Result Template -->
+                <template id="lock-result-template">
+                    <p>Your file has been securely locked!</p>
+                    <div class="passphrase-box">
+                        <label for="passphrase">Your Secret Passphrase (keep it safe!):</label>
+                        <input type="text" id="passphrase" readonly>
+                        <button id="copy-passphrase" class="btn-primary">Copy</button>
+                    </div>
+                    <div class="download-box">
+                        <a id="download-link" class="btn-secondary download-btn">📁 Download Locked File</a>
+                    </div>
+                </template>
+                
+                <!-- Unlock Result Template -->
+                <template id="unlock-result-template">
+                    <p>Your file has been unlocked!</p>
+                    <div class="download-box">
+                        <a id="decrypt-download-link" class="btn-secondary download-btn">📁 Download Original File</a>
+                    </div>
+                </template>
             </div>
         </div>
-    </div>
+        
+        <!-- For unlock mode: Passphrase input -->
+        <div id="unlock-controls" class="unlock-controls" style="display: none;">
+            <div class="passphrase-input">
+                <input type="password" id="unlock-passphrase" placeholder="Enter your secret passphrase">
+                <button id="unlock-button" class="btn-primary">Unlock File</button>
+            </div>
+        </div>
+    
+    <!-- Drop zones and file inputs (hidden, only for functionality) -->
+    <input type="file" id="lock-file-input" style="display: none;">
+    <input type="file" id="unlock-file-input" style="display: none;">
+    
+    <!-- Error display -->
+    <div id="error-message" class="error-message" style="display: none;"></div>
     
     <script src="script.js"></script>
 </body>

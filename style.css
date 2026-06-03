@@ -1,120 +1,356 @@
+/* LOCKY - Playful Encryption Game Theme */
+
+:root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #166088;
+    --accent-color: #4fc3f7;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --danger-color: #f44336;
+    --light-bg: #f8f9fa;
+    --dark-text: #2c3e50;
+    --game-font: 'Press Start 2P', cursive;
+}
+
+/* Import game-like font */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f7fa;
+    background-color: #f0f8ff;
     margin: 0;
-    padding: 20px;
-    color: #333;
-}
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    text-align: center;
-}
-
-h1 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-}
-
-.drop-zone {
-    border: 3px dashed #3498db;
-    border-radius: 10px;
-    padding: 40px;
-    margin: 30px 0;
-    cursor: pointer;
-    transition: all 0.3s;
-    background-color: #f8f9fa;
-}
-
-.drop-zone:hover {
-    background-color: #eef2f7;
-    border-color: #2980b9;
-}
-
-.drop-zone.dragover {
-    background-color: #e3f2fd;
-    border-color: #1e88e5;
-}
-
-.star-pattern {
-    font-size: 12px;
-    color: #3498db;
-    margin: 20px 0;
-    text-align: center;
-}
-
-.star-pattern pre {
-    background: none;
-    border: none;
     padding: 0;
-    margin: 0;
+    color: var(--dark-text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.8) 0%, transparent 30%),
+                      radial-gradient(circle at 90% 80%, rgba(255,255,255,0.6) 0%, transparent 40%);
 }
 
-.drop-zone-content {
+.scene-container {
+    width: 90%;
+    max-width: 800px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    position: relative;
+    border: 3px solid var(--primary-color);
+}
+
+/* Game Header - Like a Store Sign */
+.game-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    border-bottom: 5px solid var(--accent-color);
+}
+
+.game-header h1 {
+    font-family: var(--game-font), cursive;
+    font-size: 3rem;
+    margin: 0;
+    text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+    letter-spacing: 2px;
+}
+
+.tagline {
+    font-family: var(--game-font), cursive;
+    font-size: 0.8rem;
+    margin: 5px 0 0;
+    opacity: 0.9;
+    letter-spacing: 1px;
+}
+
+/* Storefront Scene */
+.storefront-scene {
+    background: linear-gradient(to bottom, #e3f2fd 0%, #bbdefb 100%);
+    padding: 30px;
+    position: relative;
+    min-height: 400px;
+}
+
+/* Cashier Character */
+.cashier-character {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    margin-bottom: 20px;
 }
 
-.results {
-    margin-top: 30px;
+.sprite-placeholder {
+    font-size: 5rem;
+    margin-bottom: 10px;
+    animation: bounce 2s infinite;
+}
+
+.dialog-box {
+    background: white;
+    border: 3px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 12px 20px;
+    margin: 0;
+    max-width: 300px;
+    position: relative;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.dialog-box::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+}
+
+/* Counter and Transaction Box */
+.counter {
+    background: #d1e7dd;
+    border-radius: 10px;
     padding: 20px;
-    background-color: #f8f9fa;
+    margin: 20px 0;
+    border: 4px solid var(--success-color);
+    position: relative;
+}
+
+.transaction-box {
+    width: 100%;
+    height: 180px;
+    background: #f8f9fa;
+    border: 4px dashed var(--primary-color);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.transaction-box:hover {
+    background: #e9ecef;
+    transform: scale(1.02);
+}
+
+.transaction-box.closed {
+    background: #f8f9fa;
+}
+
+.transaction-box.open {
+    background: #e2f3e7;
+    border-style: solid;
+    border-color: var(--success-color);
+}
+
+.box-contents {
+    text-align: center;
+    padding: 20px;
+}
+
+.box-instruction {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Service Tabs */
+.service-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.service-btn {
+    padding: 12px 25px;
+    font-family: var(--game-font), cursive;
+    font-size: 0.9rem;
+    background: white;
+    color: var(--primary-color);
+    border: 3px solid var(--primary-color);
     border-radius: 8px;
-    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+.service-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.service-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Results Panel */
+.results-panel {
+    background: linear-gradient(135deg, var(--accent-color), #87ceeb);
+    padding: 25px;
+    border-radius: 0 0 15px 15px;
+    color: var(--dark-text);
+    box-shadow: 0 -3px 10px rgba(0,0,0,0.1);
+}
+
+.results-panel h3 {
+    font-family: var(--game-font), cursive;
+    color: var(--secondary-color);
+    margin-top: 0;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
 }
 
 .passphrase-box {
-    background-color: #e8f4fc;
-    border: 1px solid #b8d8f5;
+    background: white;
+    border: 2px solid var(--success-color);
     padding: 15px;
-    border-radius: 6px;
-    margin-bottom: 20px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.passphrase-box label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--secondary-color);
 }
 
 #passphrase {
     width: 100%;
     padding: 10px;
-    font-size: 16px;
+    font-size: 1.1rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    margin: 10px 0;
-    background-color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-family: monospace;
 }
 
-.button {
-    background-color: #3498db;
-    color: white;
+/* Buttons */
+.btn-primary, .btn-secondary {
     padding: 10px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.2s;
+    font-family: var(--game-font), cursive;
+    font-size: 0.8rem;
+}
+
+.btn-primary {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--accent-color);
+    color: var(--dark-text);
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.download-btn {
     display: inline-block;
     margin-top: 10px;
-    transition: background-color 0.3s;
+    padding: 12px 25px;
 }
 
-.button:hover {
-    background-color: #2980b9;
+/* Unlock Controls */
+.unlock-controls {
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border: 2px solid var(--warning-color);
 }
 
-#copy-passphrase {
-    background-color: #2ecc71;
-    margin-left: 10px;
+.passphrase-input {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
-#copy-passphrase:hover {
-    background-color: #27ae60;
+.passphrase-input input {
+    padding: 10px;
+    border: 2px solid var(--warning-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 60%;
 }
 
-download-box {
-    margin-top: 20px;
+.passphrase-input button {
+    padding: 10px 20px;
+}
+
+/* Error Message */
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border: 2px solid #f5c6cb;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes boxOpen {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .game-header h1 {
+        font-size: 2rem;
+    }
+    
+    .service-btn {
+        font-size: 0.7rem;
+        padding: 8px 15px;
+    }
+    
+    .passphrase-input {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .passphrase-input input {
+        width: 100%;
+    }
 }
