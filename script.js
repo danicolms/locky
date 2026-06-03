@@ -1,237 +1,286 @@
-// Locky MVP - File Encryption & Decryption
-// Using Web Crypto API for client-side operations
+// LOCKY - Playful Encryption Game
+// Cashier-style interaction with lock/unlock transactions
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
+    const lockTab = document.getElementById('lock-tab');
+    const unlockTab = document.getElementById('unlock-tab');
+    const transactionBox = document.getElementById('transaction-box');
+    const boxContents = document.getElementById('box-contents');
+    const cashierDialog = document.getElementById('cashier-dialog');
     
-    const encryptDropZone = document.getElementById('drop-zone-encrypt');
-    const decryptDropZone = document.getElementById('drop-zone-decrypt');
-    const encryptFileInput = document.getElementById('file-input-encrypt');
-    const decryptFileInput = document.getElementById('file-input-decrypt');
+    const lockFileInput = document.getElementById('lock-file-input');
+    const unlockFileInput = document.getElementById('unlock-file-input');
+    const unlockControls = document.getElementById('unlock-controls');
+    const unlockPassphrase = document.getElementById('unlock-passphrase');
+    const unlockButton = document.getElementById('unlock-button');
     
-    const results = document.getElementById('results');
-    const encryptResults = document.getElementById('encrypt-results');
-    const decryptResults = document.getElementById('decrypt-results');
+    const resultsPanel = document.getElementById('results-panel');
+    const lockResultTemplate = document.getElementById('lock-result-template');
+    const unlockResultTemplate = document.getElementById('unlock-result-template');
+    const errorMessage = document.getElementById('error-message');
     
-    const passphraseInput = document.getElementById('passphrase');
-    const decryptPassphraseInput = document.getElementById('decrypt-passphrase');
-    const decryptButton = document.getElementById('decrypt-button');
-    const downloadLink = document.getElementById('download-link');
-    const decryptDownloadLink = document.getElementById('decrypt-download-link');
-    const copyButton = document.getElementById('copy-passphrase');
-    const errorMessage = document.createElement('div');
-    
+    let currentMode = 'lock'; // 'lock' or 'unlock'
+    let fileToProcess = null;
     let encryptedFile = null;
-    let fileToDecrypt = null;
     
-    // Setup error message element
-    errorMessage.className = 'error-message';
-    errorMessage.id = 'error-message';
-    results.appendChild(errorMessage);
+    // Initialize the scene
+    updateCashierDialog('Welcome to Locky! What would you like to do today?');
     
-    // Tab switching functionality
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabName = button.dataset.tab;
-            
-            // Update button styles
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            // Update content visibility
-            tabContents.forEach(content => {
-                if (content.id === tabName) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-            
-            // Reset results display
-            results.style.display = 'none';
-        });
+    // Tab switching
+    lockTab.addEventListener('click', function() {
+        switchMode('lock');
     });
     
-    // Encryption drop zone setup
-    encryptDropZone.addEventListener('click', function() {
-        encryptFileInput.click();
+    unlockTab.addEventListener('click', function() {
+        switchMode('unlock');
     });
     
-    encryptFileInput.addEventListener('change', handleFileSelect);
-    
-    // Encryption drag and drop events
-    encryptDropZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        encryptDropZone.classList.add('dragover');
-    });
-    
-    encryptDropZone.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        encryptDropZone.classList.remove('dragover');
-    });
-    
-    encryptDropZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        encryptDropZone.classList.remove('dragover');
+    function switchMode(mode) {
+        currentMode = mode;
         
-        if (e.dataTransfer.files.length) {
-            handleFileSelect({ target: { files: e.dataTransfer.files } });
+        // Update button styles
+        lockTab.classList.toggle('active', mode === 'lock');
+        unlockTab.classList.toggle('active', mode === 'unlock');
+        
+        // Update transaction box
+        resetTransactionBox();
+        
+        // Update dialog
+        if (mode === 'lock') {
+            updateCashierDialog('🔒 Lock mode activated! Drop your file in the box.');
+            unlockControls.style.display = 'none';
+        } else {
+            updateCashierDialog('🔓 Unlock mode! Drop your .enc file and enter passphrase.');
+            unlockControls.style.display = 'block';
+        }
+        
+        // Hide results
+        resultsPanel.style.display = 'none';
+    }
+    
+    function resetTransactionBox() {
+        transactionBox.className = 'transaction-box closed';
+        boxContents.innerHTML = '<p class="box-instruction">Drag & drop your file here</p>';
+        fileToProcess = null;
+        encryptedFile = null;
+    }
+    
+    function updateCashierDialog(message) {
+        cashierDialog.textContent = message;
+    }
+    
+    // Transaction box click handler
+    transactionBox.addEventListener('click', function() {
+        if (currentMode === 'lock') {
+            lockFileInput.click();
+        } else {
+            unlockFileInput.click();
         }
     });
     
-    // Decryption drop zone setup
-    decryptDropZone.addEventListener('click', function() {
-        decryptFileInput.click();
-    });
-    
-    decryptFileInput.addEventListener('change', handleDecryptFileSelect);
-    
-    // Decryption drag and drop events
-    decryptDropZone.addEventListener('dragover', function(e) {
+    // Drag and drop events
+    transactionBox.addEventListener('dragover', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        decryptDropZone.classList.add('dragover');
+        transactionBox.classList.add('open');
     });
     
-    decryptDropZone.addEventListener('dragleave', function(e) {
+    transactionBox.addEventListener('dragleave', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        decryptDropZone.classList.remove('dragover');
+        transactionBox.classList.remove('open');
     });
     
-    decryptDropZone.addEventListener('drop', function(e) {
+    transactionBox.addEventListener('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        decryptDropZone.classList.remove('dragover');
+        transactionBox.classList.remove('open');
         
         if (e.dataTransfer.files.length) {
-            handleDecryptFileSelect({ target: { files: e.dataTransfer.files } });
+            if (currentMode === 'lock') {
+                handleLockFileSelect({ target: { files: e.dataTransfer.files } });
+            } else {
+                handleUnlockFileSelect({ target: { files: e.dataTransfer.files } });
+            }
         }
     });
     
-    // Decrypt button click handler
-    decryptButton.addEventListener('click', handleDecryption);
+    // File input handlers
+    lockFileInput.addEventListener('change', handleLockFileSelect);
+    unlockFileInput.addEventListener('change', handleUnlockFileSelect);
+    unlockButton.addEventListener('click', handleUnlock);
     
-    // Copy passphrase to clipboard
-    copyButton.addEventListener('click', function() {
-        passphraseInput.select();
-        document.execCommand('copy');
-        copyButton.textContent = 'Copied!';
-        setTimeout(() => {
-            copyButton.textContent = 'Copy';
-        }, 2000);
-    });
-    
-    async function handleFileSelect(event) {
+    // Lock file handler
+    function handleLockFileSelect(event) {
         const file = event.target.files[0];
         if (!file) return;
         
-        try {
-            // Show loading state
-            encryptDropZone.innerHTML = '<p>Encrypting your file...</p>';
-            results.style.display = 'none';
-            
-            // Generate a random passphrase
-            const passphrase = generateRandomPassphrase(16);
-            
-            // Encrypt the file
-            const encryptedData = await encryptFile(file, passphrase);
-            
-            // Create download link
-            const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            
-            downloadLink.href = url;
-            downloadLink.download = file.name + '.enc';
-            
-            // Display results
-            passphraseInput.value = passphrase;
-            encryptResults.style.display = 'block';
-            decryptResults.style.display = 'none';
-            results.style.display = 'block';
-            
-        } catch (error) {
-            console.error('Encryption failed:', error);
-            encryptDropZone.innerHTML = '<p>Encryption failed. Please try again.</p>';
-            results.style.display = 'none';
-        }
+        fileToProcess = file;
+        updateCashierDialog(`📁 Got it! Locking ${file.name}...`);
+        
+        // Show processing state
+        transactionBox.classList.remove('closed');
+        transactionBox.classList.add('open');
+        boxContents.innerHTML = '<p class="box-instruction">🔒 Processing...</p>';
+        
+        // Process the file
+        setTimeout(() => {
+            processLockFile(file);
+        }, 500);
     }
     
-    function handleDecryptFileSelect(event) {
+    // Unlock file handler
+    function handleUnlockFileSelect(event) {
         const file = event.target.files[0];
         if (!file) return;
         
         // Check if file has .enc extension
         if (!file.name.endsWith('.enc')) {
-            showError('Please select a .enc file for decryption');
+            showError('🚨 Please select a .enc file for unlocking!');
             return;
         }
         
-        fileToDecrypt = file;
-        decryptDropZone.innerHTML = '<p>File ready for decryption: ' + file.name + '</p>';
-        results.style.display = 'none';
+        encryptedFile = file;
+        updateCashierDialog(`📁 Ready to unlock ${file.name}. Enter your passphrase!`);
+        
+        // Show file ready state
+        transactionBox.classList.remove('closed');
+        transactionBox.classList.add('open');
+        boxContents.innerHTML = `<p class="box-instruction">🔓 ${file.name} ready!</p>`;
     }
     
-    async function handleDecryption() {
-        if (!fileToDecrypt) {
-            showError('No file selected for decryption');
+    // Process lock file
+    async function processLockFile(file) {
+        try {
+            updateCashierDialog('🔐 Generating secure lock...');
+            
+            // Generate passphrase
+            const passphrase = generateRandomPassphrase(16);
+            
+            // Encrypt the file
+            updateCashierDialog('🔄 Encrypting your file...');
+            const encryptedData = await encryptFile(file, passphrase);
+            
+            // Create download
+            const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            // Show results
+            showLockResults(file.name, passphrase, url);
+            
+            updateCashierDialog('🎉 File locked successfully!');
+            
+        } catch (error) {
+            console.error('Lock failed:', error);
+            showError('💥 Lock failed: ' + error.message);
+            resetTransactionBox();
+        }
+    }
+    
+    // Handle unlock
+    async function handleUnlock() {
+        if (!encryptedFile) {
+            showError('🚨 No file selected for unlocking!');
             return;
         }
         
-        const passphrase = decryptPassphraseInput.value;
+        const passphrase = unlockPassphrase.value;
         if (!passphrase) {
-            showError('Please enter the passphrase');
+            showError('🔑 Please enter your passphrase!');
             return;
         }
         
         try {
-            // Show loading state
-            decryptButton.textContent = 'Decrypting...';
-            decryptButton.disabled = true;
-            hideError();
+            updateCashierDialog('🔐 Verifying passphrase...');
+            unlockButton.textContent = 'Unlocking...';
+            unlockButton.disabled = true;
             
             // Decrypt the file
-            const decryptedData = await decryptFile(fileToDecrypt, passphrase);
+            const decryptedData = await decryptFile(encryptedFile, passphrase);
             
-            // Create download link
-            const originalName = fileToDecrypt.name.replace('.enc', '');
+            // Create download
+            const originalName = encryptedFile.name.replace('.enc', '');
             const blob = new Blob([decryptedData], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
             
-            decryptDownloadLink.href = url;
-            decryptDownloadLink.download = originalName;
+            // Show results
+            showUnlockResults(originalName, url);
             
-            // Display results
-            encryptResults.style.display = 'none';
-            decryptResults.style.display = 'block';
-            results.style.display = 'block';
-            
-            // Reset for next operation
-            decryptButton.textContent = 'Decrypt File';
-            decryptButton.disabled = false;
+            updateCashierDialog('🎉 File unlocked successfully!');
             
         } catch (error) {
-            console.error('Decryption failed:', error);
-            showError('Decryption failed: ' + error.message);
-            decryptButton.textContent = 'Decrypt File';
-            decryptButton.disabled = false;
+            console.error('Unlock failed:', error);
+            showError('💥 Unlock failed: ' + error.message);
+        } finally {
+            unlockButton.textContent = 'Unlock File';
+            unlockButton.disabled = false;
         }
     }
     
+    // Show lock results
+    function showLockResults(originalName, passphrase, downloadUrl) {
+        // Clear previous results
+        resultsPanel.innerHTML = '';
+        
+        // Clone and populate template
+        const templateContent = lockResultTemplate.content.cloneNode(true);
+        const passphraseInput = templateContent.querySelector('#passphrase');
+        const downloadLink = templateContent.querySelector('#download-link');
+        const copyButton = templateContent.querySelector('#copy-passphrase');
+        
+        passphraseInput.value = passphrase;
+        downloadLink.href = downloadUrl;
+        downloadLink.download = originalName + '.enc';
+        
+        // Copy functionality
+        copyButton.addEventListener('click', function() {
+            passphraseInput.select();
+            document.execCommand('copy');
+            copyButton.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyButton.textContent = 'Copy';
+            }, 2000);
+        });
+        
+        resultsPanel.appendChild(templateContent);
+        resultsPanel.style.display = 'block';
+        
+        // Scroll to results
+        resultsPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Show unlock results
+    function showUnlockResults(originalName, downloadUrl) {
+        // Clear previous results
+        resultsPanel.innerHTML = '';
+        
+        // Clone and populate template
+        const templateContent = unlockResultTemplate.content.cloneNode(true);
+        const downloadLink = templateContent.querySelector('#decrypt-download-link');
+        
+        downloadLink.href = downloadUrl;
+        downloadLink.download = originalName;
+        
+        resultsPanel.appendChild(templateContent);
+        resultsPanel.style.display = 'block';
+        
+        // Scroll to results
+        resultsPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Error handling
     function showError(message) {
         errorMessage.textContent = message;
         errorMessage.style.display = 'block';
+        
+        // Hide error after 5 seconds
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
     }
     
-    function hideError() {
-        errorMessage.style.display = 'none';
-    }
-    
+    // Utility functions
     function generateRandomPassphrase(length) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{};:,.<>?';
         let result = '';
@@ -241,30 +290,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return result;
     }
     
+    // Encryption/Decryption functions (same as before)
     async function encryptFile(file, passphrase) {
-        // Read file as ArrayBuffer
         const fileBuffer = await readFileAsArrayBuffer(file);
-        
-        // Generate encryption key from passphrase
         const key = await deriveKeyFromPassphrase(passphrase);
-        
-        // Encrypt the file data
-        const encryptedData = await encryptData(fileBuffer, key);
-        
-        return encryptedData;
+        return encryptData(fileBuffer, key);
     }
     
     async function decryptFile(encryptedFile, passphrase) {
-        // Read encrypted file as ArrayBuffer
         const encryptedBuffer = await readFileAsArrayBuffer(encryptedFile);
-        
-        // Generate encryption key from passphrase
         const key = await deriveKeyFromPassphrase(passphrase);
-        
-        // Decrypt the file data
-        const decryptedData = await decryptData(encryptedBuffer, key);
-        
-        return decryptedData;
+        return decryptData(encryptedBuffer, key);
     }
     
     function readFileAsArrayBuffer(file) {
@@ -277,11 +313,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     async function deriveKeyFromPassphrase(passphrase) {
-        // Convert passphrase to ArrayBuffer
         const encoder = new TextEncoder();
         const passphraseBuffer = encoder.encode(passphrase);
         
-        // Derive key using PBKDF2
         const keyMaterial = await window.crypto.subtle.importKey(
             'raw',
             passphraseBuffer,
@@ -290,10 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ['deriveKey']
         );
         
-        // Generate salt
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
         
-        // Derive AES key
         const key = await window.crypto.subtle.deriveKey(
             {
                 name: 'PBKDF2',
@@ -322,7 +354,6 @@ document.addEventListener('DOMContentLoaded', function() {
             data
         );
         
-        // Combine IV, salt, and encrypted data
         const result = new Uint8Array(iv.length + keyInfo.salt.length + encryptedData.byteLength);
         result.set(iv, 0);
         result.set(new Uint8Array(keyInfo.salt), iv.length);
@@ -332,18 +363,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     async function decryptData(encryptedData, keyInfo) {
-        // Extract IV (first 12 bytes)
         const iv = encryptedData.slice(0, 12);
-        
-        // Extract salt (next 16 bytes)
         const salt = encryptedData.slice(12, 28);
-        
-        // Extract actual encrypted content (remaining bytes)
         const actualEncryptedData = encryptedData.slice(28);
         
-        // Re-derive the key using the extracted salt
         const encoder = new TextEncoder();
-        const passphraseBuffer = encoder.encode(decryptPassphraseInput.value);
+        const passphraseBuffer = encoder.encode(unlockPassphrase.value);
         
         const keyMaterial = await window.crypto.subtle.importKey(
             'raw',
@@ -366,7 +391,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ['decrypt']
         );
         
-        // Decrypt the data
         const decryptedData = await window.crypto.subtle.decrypt(
             {
                 name: 'AES-GCM',
