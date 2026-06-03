@@ -3,18 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locky MVP - File Encryption</title>
+    <title>Locky MVP - File Encryption & Decryption</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>🔒 Locky MVP</h1>
-        <p>Simple file encryption - drag and drop a file below</p>
+        <p>Simple file encryption and decryption - drag and drop files below</p>
         
-        <div id="drop-zone" class="drop-zone">
-            <div class="drop-zone-content">
-                <div class="star-pattern">
-                    <pre>
+        <div class="tabs">
+            <button class="tab-button active" data-tab="encrypt">Encrypt</button>
+            <button class="tab-button" data-tab="decrypt">Decrypt</button>
+        </div>
+        
+        <div id="encrypt" class="tab-content active">
+            <div id="drop-zone-encrypt" class="drop-zone">
+                <div class="drop-zone-content">
+                    <div class="star-pattern">
+                        <pre>
        *
       * *
      *   *
@@ -30,23 +36,64 @@
      *   *
       * *
        *
-                    </pre>
+                        </pre>
+                    </div>
+                    <p>Drag & drop files here to encrypt</p>
+                    <input type="file" id="file-input-encrypt" style="display: none;">
                 </div>
-                <p>Drag & drop files here or click to browse</p>
-                <input type="file" id="file-input" style="display: none;">
+            </div>
+        </div>
+        
+        <div id="decrypt" class="tab-content">
+            <div id="drop-zone-decrypt" class="drop-zone">
+                <div class="drop-zone-content">
+                    <div class="star-pattern">
+                        <pre>
+       *
+      * *
+     *   *
+    *     *
+   *       *
+  *         *
+ *           *
+*             *
+ *           *
+  *         *
+   *       *
+    *     *
+     *   *
+      * *
+       *
+                        </pre>
+                    </div>
+                    <p>Drag & drop .enc files here to decrypt</p>
+                    <input type="file" id="file-input-decrypt" style="display: none;">
+                </div>
+            </div>
+            <div class="passphrase-input">
+                <input type="password" id="decrypt-passphrase" placeholder="Enter passphrase used for encryption">
+                <button id="decrypt-button">Decrypt File</button>
             </div>
         </div>
         
         <div id="results" class="results" style="display: none;">
-            <h2>Encryption Results</h2>
-            <div class="passphrase-box">
-                <h3>Your Passphrase:</h3>
-                <input type="text" id="passphrase" readonly>
-                <button id="copy-passphrase">Copy</button>
+            <h2>Results</h2>
+            <div id="encrypt-results" class="encrypt-results">
+                <div class="passphrase-box">
+                    <h3>Your Passphrase:</h3>
+                    <input type="text" id="passphrase" readonly>
+                    <button id="copy-passphrase">Copy</button>
+                </div>
+                <div class="download-box">
+                    <h3>Encrypted File:</h3>
+                    <a id="download-link" class="button">Download Encrypted File</a>
+                </div>
             </div>
-            <div class="download-box">
-                <h3>Encrypted File:</h3>
-                <a id="download-link" class="button">Download Encrypted File</a>
+            <div id="decrypt-results" class="decrypt-results" style="display: none;">
+                <div class="download-box">
+                    <h3>Decrypted File:</h3>
+                    <a id="decrypt-download-link" class="button">Download Decrypted File</a>
+                </div>
             </div>
         </div>
     </div>
